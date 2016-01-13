@@ -13,14 +13,9 @@ public class Client {
 //    public static final String ipDestino = "10.19.10.129";          // MV
 
     public static void main(String[] args) {
-//        for (int i = 0; i < 10; i++) {
-
-        
-        
-            new ThreadClient("Domain-" + 0).start();
-//            portDestino++;
-
-//        }
+        for (int i = 0; i < 1; i++) {
+            new ThreadClient("Domain-" + i).start();
+        }
 
     }
 }

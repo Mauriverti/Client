@@ -8,11 +8,14 @@ package client;
 import static client.Client.ipDestino;
 import static client.Client.portDestino;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -29,10 +32,16 @@ public class ThreadClient extends Thread {
 
     @Override
     public void run() {
+        Socket client = null;
         try {
-            Socket client = new Socket(ipDestino, portDestino);
+            while (client == null) {
+                client = new Socket(ipDestino, portDestino);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(ThreadClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
             System.out.println("Cliente " + hostname + " se conectou com sucesso!");
-
             Scanner scanner = new Scanner(client.getInputStream());
             if (scanner.hasNextLine()) {
                 Integer port = Integer.parseInt(scanner.nextLine());
@@ -54,7 +63,7 @@ public class ThreadClient extends Thread {
             String line;
             reader.readLine(); // cabecalho
             reader.readLine(); // titulos
-            
+
             while ((line = reader.readLine()) != null) {
                 saida.println(hostname + "->" + line);
             }
