@@ -14,8 +14,6 @@ import java.io.PrintStream;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -24,6 +22,7 @@ import java.util.logging.Logger;
 public class ThreadClient extends Thread {
 
     private final String hostname;
+    private Boolean keepRunning = false;
 
     public ThreadClient(String hostname) {
         this.hostname = hostname;
@@ -32,14 +31,16 @@ public class ThreadClient extends Thread {
 
     @Override
     public void run() {
-        Socket client = null;
-        try {
-            while (client == null) {
-                client = new Socket(ipDestino, portDestino);
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(ThreadClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
+
+        do {
+            Socket client = null;
+            keepRunning = false;
+            client = clientConnect(client);
+            sendToServer(client);
+        } while (keepRunning);
+    }
+
+    private void sendToServer(Socket client) {
         try {
             System.out.println("Cliente " + hostname + " se conectou com sucesso!");
             Scanner scanner = new Scanner(client.getInputStream());
@@ -50,7 +51,6 @@ public class ThreadClient extends Thread {
             }
 
             PrintStream saida = new PrintStream(client.getOutputStream());
-
             String getHostnameCommand = "hostname";
             Process getHostNameProcess = Runtime.getRuntime().exec(getHostnameCommand);
 
@@ -64,8 +64,11 @@ public class ThreadClient extends Thread {
             reader.readLine(); // cabecalho
             reader.readLine(); // titulos
 
+            scanner = new Scanner(client.getInputStream());
+
             while ((line = reader.readLine()) != null) {
                 saida.println(hostname + "->" + line);
+                scanner.nextLine();
             }
 
             getStatusProcess.waitFor();
@@ -74,11 +77,24 @@ public class ThreadClient extends Thread {
             client.close();
         } catch (ConnectException ce) {
             System.out.println("Falha ao se comunicar com o servidor em " + ipDestino + ":" + portDestino);
-            ce.printStackTrace();
+            keepRunning = true;
         } catch (Exception e) {
             System.out.println("Falha inesperada no Cliente");
-            e.printStackTrace();
+            keepRunning = true;
         }
+
+        System.out.println("start over");
+
+    }
+
+    private Socket clientConnect(Socket client) {
+        while (client == null) {
+            try {
+                client = new Socket(ipDestino, portDestino);
+            } catch (IOException ex) {
+            }
+        }
+        return client;
     }
 
 }
