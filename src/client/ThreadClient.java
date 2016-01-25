@@ -1,8 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @author mauriverti
  */
+
 package client;
 
 import static client.Client.ipDestino;
@@ -15,23 +14,38 @@ import java.net.ConnectException;
 import java.net.Socket;
 import java.util.Scanner;
 
-/**
- *
- * @author mauriverti
- */
 public class ThreadClient extends Thread {
 
     private final String hostname;
     private Boolean keepRunning = false;
 
-    public ThreadClient(String hostname) {
+    public ThreadClient() {
+        
+        String hostname = "";
+        
+        try {
+            Process proc = Runtime.getRuntime().exec("hostname");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                hostname += line;
+            }
+
+            proc.waitFor();
+        } catch (Exception e) {
+            System.out.println("PRoblema em pegar hostname");
+            e.printStackTrace();
+        }
+        
         this.hostname = hostname;
 
     }
 
     @Override
     public void run() {
-
         do {
             Socket client = null;
             keepRunning = false;
@@ -68,7 +82,6 @@ public class ThreadClient extends Thread {
 
             while ((line = reader.readLine()) != null) {
                 saida.println(hostname + "->" + line);
-                scanner.nextLine();
             }
 
             getStatusProcess.waitFor();
@@ -83,7 +96,7 @@ public class ThreadClient extends Thread {
             keepRunning = true;
         }
 
-        System.out.println("start over");
+        System.out.println("client start over");
 
     }
 
@@ -96,5 +109,4 @@ public class ThreadClient extends Thread {
         }
         return client;
     }
-
 }
